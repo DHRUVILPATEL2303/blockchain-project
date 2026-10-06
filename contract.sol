@@ -15,6 +15,7 @@ contract PracticalSubmission {
         address student;     // wallet that submitted
         uint256 practicalNo;
         string  title;
+        string  ipfsHash;    // IPFS CID of the practical file
         bytes32 fileHash;    // sha256 of the practical file (proof it was not changed later)
         uint256 timestamp;
         bool    verified;
@@ -62,19 +63,20 @@ contract PracticalSubmission {
         return (s.name, s.enrollmentNo, s.registered);
     }
 
-    // ---------- Student: submit a practical ----------
+    // ---------- Student: submit a practical with IPFS CID & SHA-256 ----------
     function submitPractical(
         uint256 practicalNo,
         string calldata title,
+        string calldata ipfsHash,
         bytes32 fileHash
     ) external onlyRegisteredStudent {
         totalSubmissions += 1;
         uint256 id = totalSubmissions;
-        submissions[id] = Submission(id, msg.sender, practicalNo, title, fileHash, block.timestamp, false);
+        submissions[id] = Submission(id, msg.sender, practicalNo, title, ipfsHash, fileHash, block.timestamp, false);
         emit Submitted(id, msg.sender, practicalNo);
     }
 
-    // ---------- Professor: see submission together with the student's identity ----------
+    // ---------- Professor/Student: see submission with student identity & IPFS hash ----------
     function getSubmission(uint256 id)
         external view
         returns (
@@ -82,6 +84,7 @@ contract PracticalSubmission {
             string memory enrollmentNo,
             uint256 practicalNo,
             string memory title,
+            string memory ipfsHash,
             bytes32 fileHash,
             uint256 timestamp,
             bool verified
@@ -90,7 +93,7 @@ contract PracticalSubmission {
         require(id >= 1 && id <= totalSubmissions, "no such submission");
         Submission memory s = submissions[id];
         Student memory st = students[s.student];
-        return (st.name, st.enrollmentNo, s.practicalNo, s.title, s.fileHash, s.timestamp, s.verified);
+        return (st.name, st.enrollmentNo, s.practicalNo, s.title, s.ipfsHash, s.fileHash, s.timestamp, s.verified);
     }
 
     // ---------- Professor: verify ----------

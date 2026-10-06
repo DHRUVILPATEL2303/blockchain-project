@@ -18,6 +18,29 @@ async function hashFile(file) {
   return "0x" + [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
+export async function uploadToIpfs(file) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  let res;
+  try {
+    res = await fetch("http://localhost:5000/api/upload", {
+      method: "POST",
+      body: formData,
+    });
+  } catch {
+    throw new Error("Could not connect to IPFS upload service. Please ensure the backend is running (`node server.js` in the backend folder).");
+  }
+
+  if (!res.ok) {
+    const errJson = await res.json().catch(() => ({}));
+    throw new Error(errJson.error || "Failed to upload file to IPFS.");
+  }
+
+  const data = await res.json();
+  return data.ipfsHash;
+}
+
 export function useContract() {
   const [address, setAddress] = useState(
     () => CONTRACT_ADDRESS || localStorage.getItem("ps_addr") || ""
@@ -51,9 +74,10 @@ export function useContract() {
           enroll: submission[1],
           no: Number(submission[2]),
           title: submission[3],
-          hash: submission[4],
-          time: Number(submission[5]),
-          verified: submission[6],
+          ipfsHash: submission[4] || "",
+          hash: submission[5],
+          time: Number(submission[6]),
+          verified: submission[7],
         });
       }
       setSubmissions(records.reverse());
@@ -137,5 +161,6 @@ export function useContract() {
     disconnect,
     run,
     hashFile,
+    uploadToIpfs,
   };
 }

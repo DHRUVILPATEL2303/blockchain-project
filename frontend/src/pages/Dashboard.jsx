@@ -13,6 +13,7 @@ import {
   CheckIcon,
 } from "../components/Icons";
 import { Button, Card, Input } from "../components/ui";
+import { uploadToIpfs } from "../hooks/useContract";
 
 export default function Dashboard({
   role,
@@ -26,6 +27,8 @@ export default function Dashboard({
   const [form, setForm] = useState({ no: "1", title: "", wallet: "", name: "", enroll: "" });
   const [fileInfo, setFileInfo] = useState(null);
   const [computingHash, setComputingHash] = useState(false);
+  const [uploadingIpfs, setUploadingIpfs] = useState(false);
+  const [ipfsCid, setIpfsCid] = useState("");
   const [copiedAccount, setCopiedAccount] = useState(false);
 
   const setField = (key) => (e) => setForm({ ...form, [key]: e.target.value });
@@ -35,6 +38,7 @@ export default function Dashboard({
     if (!file) return;
 
     setComputingHash(true);
+    setIpfsCid("");
     try {
       const digest = await crypto.subtle.digest("SHA-256", await file.arrayBuffer());
       const hash =
@@ -65,9 +69,29 @@ export default function Dashboard({
 
   const submit = async () => {
     if (!fileInfo?.hash || !form.title) return;
+
+    setUploadingIpfs(true);
+    let uploadedIpfsCid = "";
+    try {
+      uploadedIpfsCid = await uploadToIpfs(fileInfo.file);
+      setIpfsCid(uploadedIpfsCid);
+    } catch (err) {
+      alert(err.message || "Could not upload file to IPFS. Make sure the backend server is running.");
+      setUploadingIpfs(false);
+      return;
+    } finally {
+      setUploadingIpfs(false);
+    }
+
     return run(
-      () => contract.submitPractical(Number(form.no), form.title.trim(), fileInfo.hash),
-      `Practical ${form.no} submitted with immutable SHA-256 proof`
+      () =>
+        contract.submitPractical(
+          Number(form.no),
+          form.title.trim(),
+          uploadedIpfsCid,
+          fileInfo.hash
+        ),
+      `Practical ${form.no} pinned to IPFS and recorded on Ethereum`
     );
   };
 
@@ -87,9 +111,7 @@ export default function Dashboard({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-800/80">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-medium text-zinc-400">
-              Workspace
-            </span>
+            <span className="text-xs font-medium text-zinc-400">Workspace</span>
             <span className="text-zinc-600">·</span>
             <span className="text-xs text-zinc-500 font-mono">{shortAccount}</span>
           </div>
@@ -102,9 +124,9 @@ export default function Dashboard({
           </h1>
           <p className="text-xs sm:text-sm text-zinc-400 mt-0.5">
             {role === "Professor"
-              ? "Authorize student wallets and certify coursework authenticity with cryptographic proof."
+              ? "Authorize student wallets and review practical PDFs stored on decentralized IPFS."
               : role === "Student"
-              ? "Generate client SHA-256 fingerprints and record coursework receipts on Ethereum."
+              ? "Upload coursework to decentralized IPFS and record verification receipts on Ethereum."
               : "Wallet connected as a guest. Contact your course professor to register."}
           </p>
         </div>
@@ -123,16 +145,14 @@ export default function Dashboard({
 
       {/* Metrics Row */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-4">
+        <div className="rounded-lg border border-zinc-800 bg-[#111114] p-4">
           <span className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider block mb-1">
             Total Submissions
           </span>
-          <div className="text-2xl font-bold text-white">
-            {submissions.length}
-          </div>
+          <div className="text-2xl font-bold text-white">{submissions.length}</div>
         </div>
 
-        <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-4">
+        <div className="rounded-lg border border-zinc-800 bg-[#111114] p-4">
           <span className="text-[11px] font-medium text-emerald-400 uppercase tracking-wider block mb-1">
             Verified
           </span>
@@ -141,7 +161,7 @@ export default function Dashboard({
           </div>
         </div>
 
-        <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-4">
+        <div className="rounded-lg border border-zinc-800 bg-[#111114] p-4">
           <span className="text-[11px] font-medium text-amber-400 uppercase tracking-wider block mb-1">
             Pending Review
           </span>
@@ -212,7 +232,7 @@ export default function Dashboard({
                 <h2 className="text-sm font-semibold text-white">Submit Assignment Proof</h2>
               </div>
               <p className="text-xs text-zinc-400 mb-4">
-                Compute client SHA-256 digest and record receipt on Ethereum.
+                Upload coursework to IPFS and pin immutable cryptographic proof to Ethereum.
               </p>
 
               <div className="space-y-3">
@@ -239,7 +259,7 @@ export default function Dashboard({
                 {/* File Dropzone */}
                 <div>
                   <label className="block text-xs font-medium text-zinc-400 mb-1.5">
-                    Assignment File
+                    Assignment File (PDF, Code, or Document)
                   </label>
                   <label className="flex flex-col items-center justify-center border border-dashed border-zinc-700/80 hover:border-zinc-500 bg-zinc-900/60 rounded-lg p-5 cursor-pointer transition text-center group">
                     <UploadCloudIcon className="w-5 h-5 text-zinc-500 group-hover:text-zinc-300 transition mb-1.5" />
@@ -262,18 +282,26 @@ export default function Dashboard({
                 {computingHash && (
                   <div className="flex items-center gap-2 text-xs text-zinc-300 bg-zinc-900 border border-zinc-800 p-2.5 rounded-lg">
                     <span className="w-3 h-3 border-2 border-zinc-400 border-t-transparent rounded-full animate-spin" />
-                    Calculating client SHA-256 fingerprint…
+                    Computing client SHA-256 fingerprint locally…
+                  </div>
+                )}
+
+                {/* IPFS Uploading Indicator */}
+                {uploadingIpfs && (
+                  <div className="flex items-center gap-2 text-xs text-blue-300 bg-blue-950/40 border border-blue-900/60 p-2.5 rounded-lg">
+                    <span className="w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+                    Uploading PDF to decentralized IPFS via Pinata…
                   </div>
                 )}
 
                 {fileInfo?.hash && !computingHash && (
-                  <div className="bg-zinc-900/90 border border-zinc-800 rounded-lg p-3 space-y-1">
+                  <div className="bg-zinc-900/90 border border-zinc-800 rounded-lg p-3 space-y-1.5">
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-zinc-400 flex items-center gap-1.5 font-medium">
                         <CheckCircleIcon className="w-3.5 h-3.5 text-emerald-400" />
                         Client SHA-256 Digest
                       </span>
-                      <span className="text-[11px] text-emerald-400 font-medium">Hashed locally</span>
+                      <span className="text-[11px] text-emerald-400 font-medium">Verified locally</span>
                     </div>
                     <code className="block text-[11px] font-mono text-zinc-300 break-all select-all bg-black/40 p-2 rounded border border-zinc-800/80">
                       {fileInfo.hash}
@@ -284,12 +312,12 @@ export default function Dashboard({
                 <div className="pt-1">
                   <Button
                     onClick={submit}
-                    disabled={busy || !fileInfo?.hash || !form.title}
-                    loading={busy}
+                    disabled={busy || uploadingIpfs || !fileInfo?.hash || !form.title}
+                    loading={busy || uploadingIpfs}
                     className="w-full"
                     icon={<FileTextIcon className="w-4 h-4" />}
                   >
-                    Submit Practical Proof On-Chain
+                    {uploadingIpfs ? "Pinning to IPFS…" : "Submit Practical Proof On-Chain"}
                   </Button>
                 </div>
               </div>
@@ -344,11 +372,11 @@ export default function Dashboard({
 
             <div className="space-y-3 text-xs">
               <div className="flex items-start gap-2.5">
-                <HashIcon className="w-4 h-4 text-zinc-400 shrink-0 mt-0.5" />
+                <UploadCloudIcon className="w-4 h-4 text-zinc-400 shrink-0 mt-0.5" />
                 <div>
-                  <h4 className="font-semibold text-zinc-200">Zero File Exposure</h4>
+                  <h4 className="font-semibold text-zinc-200">Decentralized IPFS Storage</h4>
                   <p className="text-zinc-400 mt-0.5">
-                    Your raw document never leaves your machine. Only a cryptographic fingerprint is sent.
+                    Coursework PDFs are pinned to IPFS, ensuring permanent, tamper-resistant document access.
                   </p>
                 </div>
               </div>
@@ -358,7 +386,7 @@ export default function Dashboard({
                 <div>
                   <h4 className="font-semibold text-zinc-200">Block Timestamping</h4>
                   <p className="text-zinc-400 mt-0.5">
-                    Ethereum block headers verify the precise date and time of your submission.
+                    Ethereum block headers verify the exact submission time without relying on central servers.
                   </p>
                 </div>
               </div>
@@ -368,13 +396,12 @@ export default function Dashboard({
                 <div>
                   <h4 className="font-semibold text-zinc-200">Professor Verification</h4>
                   <p className="text-zinc-400 mt-0.5">
-                    Submissions can be certified on-chain with non-repudiable academic validity.
+                    Professors inspect the uploaded PDF and certify official verification on-chain.
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Only show Identity lookup link if Professor */}
             {role === "Professor" && (
               <div className="mt-4 pt-3 border-t border-zinc-800">
                 <Link
