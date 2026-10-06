@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router";
+import { Navigate, Route, Routes, useNavigate } from "react-router";
 import Layout from "./components/Layout";
 import { useContract } from "./hooks/useContract";
 import Dashboard from "./pages/Dashboard";
@@ -13,15 +13,7 @@ function Protected({ children, contract }) {
 export default function App() {
   const wallet = useContract();
   const navigate = useNavigate();
-  const location = useLocation();
 
-  const connect = async () => {
-    await wallet.connect();
-  };
-
-  // When wallet is connected and user is on landing page, give option to open dashboard
-  // Notice: We don't forcefully trap the user if they deliberately click Overview (pathname === "/")
-  // But if freshly connected from home page, automatically transition to dashboard
   const handleConnect = async () => {
     await wallet.connect();
     if (wallet.account) {
@@ -44,7 +36,6 @@ export default function App() {
       onConnect={handleConnect}
       onDisconnect={wallet.disconnect}
       address={wallet.address}
-      setAddress={wallet.setAddress}
       busy={wallet.busy}
       notice={notice}
     >
@@ -54,7 +45,6 @@ export default function App() {
           element={
             <Home
               address={wallet.address}
-              setAddress={wallet.setAddress}
               onConnect={handleConnect}
               account={wallet.account}
               role={wallet.role}
@@ -70,18 +60,23 @@ export default function App() {
           }
         />
         <Route
-          path="/identity"
-          element={
-            <Protected contract={wallet.contract}>
-              <Identity contract={wallet.contract} />
-            </Protected>
-          }
-        />
-        <Route
           path="/submissions"
           element={
             <Protected contract={wallet.contract}>
               <Submissions {...wallet} />
+            </Protected>
+          }
+        />
+        {/* Only teacher/professor has access to Identity */}
+        <Route
+          path="/identity"
+          element={
+            <Protected contract={wallet.contract}>
+              {wallet.role === "Professor" ? (
+                <Identity contract={wallet.contract} />
+              ) : (
+                <Navigate to="/dashboard" replace />
+              )}
             </Protected>
           }
         />

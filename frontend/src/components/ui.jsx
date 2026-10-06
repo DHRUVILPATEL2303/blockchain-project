@@ -10,27 +10,28 @@ export function Button({
   className = "",
   ...props
 }) {
-  const base = "inline-flex items-center justify-center font-medium transition-all duration-150 select-none cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 active:translate-y-[0.5px]";
+  const base =
+    "inline-flex items-center justify-center font-medium transition select-none cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 active:translate-y-[0.5px]";
 
   const sizes = {
     sm: "text-xs px-3 py-1.5 rounded-lg gap-1.5",
-    md: "text-sm px-4 py-2.5 rounded-xl gap-2",
-    lg: "text-base px-5 py-3 rounded-xl gap-2.5",
+    md: "text-sm px-4 py-2 rounded-lg gap-2",
+    lg: "text-sm px-5 py-2.5 rounded-lg gap-2",
   };
 
   const variants = {
     primary:
-      "bg-blue-600 hover:bg-blue-500 text-white shadow-sm shadow-blue-600/25 border border-blue-500/50 hover:shadow-md hover:shadow-blue-500/20",
+      "bg-zinc-100 text-zinc-950 hover:bg-zinc-200 font-semibold shadow-sm",
     secondary:
-      "bg-slate-800/90 hover:bg-slate-700/90 text-slate-200 border border-slate-700/80 shadow-sm shadow-black/20",
+      "bg-zinc-900 text-zinc-200 border border-zinc-800 hover:bg-zinc-800/80 hover:text-white",
     outline:
-      "bg-transparent hover:bg-slate-800/50 text-slate-300 border border-slate-700 hover:text-white",
+      "bg-transparent text-zinc-300 border border-zinc-700/80 hover:bg-zinc-800 hover:text-white",
     ghost:
-      "bg-transparent hover:bg-slate-800/60 text-slate-400 hover:text-slate-200",
+      "bg-transparent text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50",
     success:
-      "bg-emerald-600 hover:bg-emerald-500 text-white border border-emerald-500/50 shadow-sm shadow-emerald-600/20",
+      "bg-emerald-600 hover:bg-emerald-500 text-white font-medium",
     danger:
-      "bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30",
+      "bg-rose-950/40 text-rose-300 border border-rose-800/50 hover:bg-rose-900/40",
   };
 
   return (
@@ -49,12 +50,10 @@ export function Button({
   );
 }
 
-export function Card({ children, className = "", hover = false, ...props }) {
+export function Card({ children, className = "", ...props }) {
   return (
     <div
-      className={`rounded-2xl border border-slate-800/80 bg-[#111726]/80 p-6 shadow-xl shadow-black/20 backdrop-blur-md ${
-        hover ? "transition-all duration-200 hover:border-slate-700 hover:shadow-black/30" : ""
-      } ${className}`}
+      className={`rounded-xl border border-zinc-800 bg-[#111114] p-5 shadow-sm transition-all hover:border-zinc-700/80 ${className}`}
       {...props}
     >
       {children}
@@ -66,36 +65,36 @@ export function Input({ label, error, helper, className = "", ...props }) {
   return (
     <div className="w-full">
       {label && (
-        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+        <label className="block text-xs font-medium text-zinc-400 mb-1.5">
           {label}
         </label>
       )}
       <input
-        className={`w-full rounded-xl border border-slate-700/80 bg-[#0d1322] px-3.5 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition-all duration-150 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 ${className}`}
+        className={`w-full rounded-lg border border-zinc-800 bg-[#0c0c0e] px-3.5 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 outline-none transition focus:border-zinc-500 ${className}`}
         {...props}
       />
       {error ? (
-        <p className="mt-1.5 text-xs text-rose-400">{error}</p>
+        <p className="mt-1 text-xs text-rose-400">{error}</p>
       ) : helper ? (
-        <p className="mt-1.5 text-xs text-slate-500">{helper}</p>
+        <p className="mt-1 text-xs text-zinc-500">{helper}</p>
       ) : null}
     </div>
   );
 }
 
-export function Badge({ children, variant = "slate", className = "" }) {
+export function Badge({ children, variant = "zinc", className = "" }) {
   const variants = {
-    blue: "bg-blue-500/10 text-blue-400 border-blue-500/20",
-    emerald: "bg-emerald-500/10 text-emerald-400 border-emerald-500/25",
-    amber: "bg-amber-500/10 text-amber-400 border-amber-500/20",
-    rose: "bg-rose-500/10 text-rose-400 border-rose-500/20",
-    slate: "bg-slate-800/80 text-slate-300 border-slate-700/60",
+    zinc: "bg-zinc-800 text-zinc-300 border-zinc-700/60",
+    emerald: "bg-emerald-950/40 text-emerald-400 border-emerald-800/50",
+    amber: "bg-amber-950/40 text-amber-400 border-amber-800/50",
+    rose: "bg-rose-950/40 text-rose-400 border-rose-800/50",
+    blue: "bg-blue-950/40 text-blue-400 border-blue-800/50",
   };
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
-        variants[variant] || variants.slate
+      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-medium border ${
+        variants[variant] || variants.zinc
       } ${className}`}
     >
       {children}

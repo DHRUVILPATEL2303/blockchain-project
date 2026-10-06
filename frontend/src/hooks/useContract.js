@@ -20,7 +20,7 @@ async function hashFile(file) {
 
 export function useContract() {
   const [address, setAddress] = useState(
-    () => localStorage.getItem("ps_addr") || CONTRACT_ADDRESS || ""
+    () => CONTRACT_ADDRESS || localStorage.getItem("ps_addr") || ""
   );
   const [account, setAccount] = useState("");
   const [contract, setContract] = useState(null);
@@ -78,13 +78,13 @@ export function useContract() {
   }, [load]);
 
   const connect = async (contractAddress = address) => {
-    const targetAddr = (contractAddress || address || CONTRACT_ADDRESS || "").trim();
+    const targetAddr = (CONTRACT_ADDRESS || contractAddress || address || "").trim();
     try {
       if (!window.ethereum) {
         throw new Error("MetaMask is not installed. Please install MetaMask to connect.");
       }
       if (!isAddress(targetAddr)) {
-        throw new Error("Please specify a valid Ethereum contract address.");
+        throw new Error("Please verify the Ethereum contract address in config.js.");
       }
       const provider = new BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
@@ -94,7 +94,6 @@ export function useContract() {
       setAccount(userAddr);
       setContract(instance);
       setAddress(targetAddr);
-      localStorage.setItem("ps_addr", targetAddr);
       setNotice(null);
     } catch (error) {
       setNotice({ text: errorMessage(error), type: "error" });

@@ -8,51 +8,50 @@ import {
   ArrowRightIcon,
   CopyIcon,
   CheckIcon,
-  FileTextIcon,
-  CheckCircleIcon,
 } from "../components/Icons";
-import { Button, Card } from "../components/ui";
+import { Button } from "../components/ui";
 
 const features = [
   {
-    icon: <ShieldCheckIcon className="w-6 h-6 text-blue-400" />,
+    icon: <ShieldCheckIcon className="w-4 h-4 text-zinc-200" />,
+    badge: "Immutable",
     title: "Tamper-Proof Records",
-    desc: "File hashes and submission timestamps stored directly in Ethereum state cannot be altered, overwritten, or erased by anyone.",
+    desc: "Submission hashes and block timestamps stored directly on Ethereum cannot be altered, erased, or manipulated.",
   },
   {
-    icon: <AcademicCapIcon className="w-6 h-6 text-emerald-400" />,
+    icon: <AcademicCapIcon className="w-4 h-4 text-zinc-200" />,
+    badge: "Authorized",
     title: "Verified Student Identity",
-    desc: "Professors register verified students by enrollment number, creating cryptographic proof of authorship for each assignment.",
+    desc: "Professors register authorized students by enrollment number, linking wallet addresses to academic identity.",
   },
   {
-    icon: <HashIcon className="w-6 h-6 text-indigo-400" />,
-    title: "Client-Side SHA-256 Fingerprint",
-    desc: "Assignments are hashed locally in your browser. The cryptographic digest serves as absolute mathematical proof of originality.",
+    icon: <HashIcon className="w-4 h-4 text-zinc-200" />,
+    badge: "Zero-Knowledge",
+    title: "Client-Side SHA-256",
+    desc: "Assignments are hashed locally in your browser. Raw files remain private and never touch an external server.",
   },
 ];
 
 const workflowSteps = [
   {
-    step: "01",
-    title: "Upload & Hash",
-    desc: "Student selects the assignment file. Browser generates a unique SHA-256 cryptographic digest.",
+    step: "Step 01",
+    title: "Select & Hash",
+    desc: "Choose your coursework file. The browser computes an instant SHA-256 cryptographic digest locally.",
   },
   {
-    step: "02",
-    title: "Smart Contract Minting",
-    desc: "Submission metadata and hash are broadcast to Ethereum, creating an immutable on-chain receipt.",
+    step: "Step 02",
+    title: "Submit On-Chain",
+    desc: "Broadcast practical number, title, and hash to the smart contract as an indelible timestamped receipt.",
   },
   {
-    step: "03",
-    title: "Professor Verification",
-    desc: "Professor inspects the practical and certifies authenticity with an on-chain verification signature.",
+    step: "Step 03",
+    title: "Professor Certification",
+    desc: "The professor reviews the practical and records verified authenticity directly on the Ethereum ledger.",
   },
 ];
 
-export default function Home({ address, setAddress, onConnect, account, role }) {
+export default function Home({ address, onConnect, account, role }) {
   const [copied, setCopied] = useState(false);
-  const [isEditingAddress, setIsEditingAddress] = useState(false);
-  const [tempAddress, setTempAddress] = useState(address);
 
   const copyContract = () => {
     if (!address) return;
@@ -61,161 +60,108 @@ export default function Home({ address, setAddress, onConnect, account, role }) 
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleSaveAddress = (e) => {
-    e.preventDefault();
-    if (tempAddress.trim()) {
-      setAddress(tempAddress.trim());
-      localStorage.setItem("ps_addr", tempAddress.trim());
-      setIsEditingAddress(false);
-    }
-  };
-
   return (
-    <div className="flex flex-col items-center pt-8 pb-16">
-      
-      {/* Top Protocol Badge */}
-      <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-xs font-semibold text-blue-400 mb-8 shadow-sm">
-        <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
-        Ethereum Academic Verification Protocol
+    <div className="flex flex-col items-center pt-8 sm:pt-12 pb-16">
+      {/* Top Protocol Tag */}
+      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-xs text-zinc-300 mb-6 shadow-sm">
+        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+        Ethereum Academic Protocol
       </div>
 
       {/* Hero Headline */}
-      <div className="max-w-3xl text-center mb-6">
-        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.15]">
-          Academic submissions.{" "}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300">
-            Cryptographically sealed.
-          </span>
+      <div className="max-w-2xl text-center mb-8">
+        <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-white leading-tight">
+          Academic submissions, verified on the blockchain.
         </h1>
-        <p className="mt-5 text-base sm:text-lg text-slate-400 leading-relaxed max-w-2xl mx-auto">
-          Prove authorship, timestamp coursework, and receive professor verification on the
-          Ethereum blockchain. Zero passwords, no centralized storage vulnerabilities.
+        <p className="mt-3.5 text-sm sm:text-base text-zinc-400 leading-relaxed max-w-lg mx-auto">
+          Timestamp coursework, prove authorship, and receive official professor verification with client-side SHA-256 digests.
         </p>
       </div>
 
-      {/* Primary Hero Actions */}
-      <div className="flex flex-wrap items-center justify-center gap-3.5 mb-14">
+      {/* Hero Actions */}
+      <div className="flex flex-wrap items-center justify-center gap-3 mb-10">
         {account ? (
           <Link to="/dashboard">
-            <Button size="lg" icon={<ArrowRightIcon className="w-5 h-5" />}>
+            <Button size="md" icon={<ArrowRightIcon className="w-4 h-4" />}>
               Open Dashboard ({role || "Connected"})
             </Button>
           </Link>
         ) : (
           <Button
-            size="lg"
+            size="md"
             onClick={onConnect}
-            icon={<WalletIcon className="w-5 h-5" />}
-            className="bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-600/25 px-6"
+            icon={<WalletIcon className="w-4 h-4" />}
+            className="bg-zinc-100 hover:bg-zinc-200 text-zinc-950 font-semibold px-5"
           >
-            Connect MetaMask Wallet
+            Connect Wallet
           </Button>
         )}
 
         <a
-          href="#architecture"
-          className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold text-slate-300 bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/80 transition-all"
+          href="#how-it-works"
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs sm:text-sm font-medium text-zinc-300 bg-zinc-900 hover:bg-zinc-800/80 border border-zinc-800 transition"
         >
-          <FileTextIcon className="w-4 h-4 text-slate-400" />
-          How Protocol Works
+          How It Works
         </a>
       </div>
 
-      {/* Target Contract Status Card */}
-      <div className="w-full max-w-2xl mb-16">
-        <div className="rounded-2xl border border-slate-800 bg-[#111726]/90 p-5 shadow-xl shadow-black/30 backdrop-blur-md">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800/80">
-            <div>
-              <span className="text-[11px] font-bold tracking-wider uppercase text-slate-400">
-                Connected Smart Contract
+      {/* Deployed Contract Ribbon (Clean & Crisp) */}
+      {address && (
+        <div className="w-full max-w-lg mb-14">
+          <div className="flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-xl bg-[#111114] border border-zinc-800 text-xs shadow-sm">
+            <div className="flex items-center gap-2.5 text-zinc-400 truncate">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
+              <span className="text-zinc-400 font-medium shrink-0">Smart Contract:</span>
+              <span className="font-mono text-zinc-200 text-[11px] truncate">
+                {address}
               </span>
-              <div className="flex items-center gap-2 mt-1">
-                <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                <span className="font-mono text-sm text-slate-200 font-medium">
-                  {address ? `${address.slice(0, 10)}…${address.slice(-8)}` : "No address specified"}
-                </span>
-                {address && (
-                  <button
-                    onClick={copyContract}
-                    className="p-1 rounded text-slate-400 hover:text-white transition cursor-pointer hover:bg-slate-800"
-                    title="Copy full address"
-                  >
-                    {copied ? (
-                      <CheckIcon className="w-3.5 h-3.5 text-emerald-400" />
-                    ) : (
-                      <CopyIcon className="w-3.5 h-3.5" />
-                    )}
-                  </button>
-                )}
-              </div>
             </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setIsEditingAddress(!isEditingAddress)}
-                className="text-xs font-medium px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition cursor-pointer border border-slate-700"
-              >
-                {isEditingAddress ? "Close" : "Change Contract"}
-              </button>
-            </div>
-          </div>
-
-          {isEditingAddress && (
-            <form onSubmit={handleSaveAddress} className="mt-4 pt-3 flex flex-col sm:flex-row gap-2">
-              <input
-                type="text"
-                value={tempAddress}
-                onChange={(e) => setTempAddress(e.target.value)}
-                placeholder="0x… custom contract address"
-                className="flex-1 font-mono text-xs bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 outline-none focus:border-blue-500"
-              />
-              <Button type="submit" size="sm">
-                Save & Update
-              </Button>
-            </form>
-          )}
-
-          <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs text-slate-400">
-            <div className="bg-slate-900/60 rounded-xl p-2.5 border border-slate-800/80">
-              <span className="text-slate-500 block text-[10px] font-semibold uppercase">Security</span>
-              <span className="text-slate-200 font-medium">SHA-256 Digest</span>
-            </div>
-            <div className="bg-slate-900/60 rounded-xl p-2.5 border border-slate-800/80">
-              <span className="text-slate-500 block text-[10px] font-semibold uppercase">Network</span>
-              <span className="text-slate-200 font-medium">Ethereum EVM</span>
-            </div>
-            <div className="col-span-2 sm:col-span-1 bg-slate-900/60 rounded-xl p-2.5 border border-slate-800/80">
-              <span className="text-slate-500 block text-[10px] font-semibold uppercase">Identity</span>
-              <span className="text-slate-200 font-medium">On-chain Roll No.</span>
-            </div>
+            <button
+              onClick={copyContract}
+              title="Copy contract address"
+              className="p-1 rounded text-zinc-400 hover:text-white transition cursor-pointer shrink-0 hover:bg-zinc-800"
+            >
+              {copied ? (
+                <CheckIcon className="w-3.5 h-3.5 text-emerald-400" />
+              ) : (
+                <CopyIcon className="w-3.5 h-3.5" />
+              )}
+            </button>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Feature Grid */}
-      <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-3 gap-5 mb-20">
-        {features.map(({ icon, title, desc }) => (
+      {/* Feature Cards */}
+      <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-3 gap-4 mb-16">
+        {features.map(({ icon, badge, title, desc }) => (
           <div
             key={title}
-            className="rounded-2xl border border-slate-800/80 bg-[#111726]/60 p-6 backdrop-blur-sm transition-all duration-200 hover:border-slate-700 hover:bg-[#111726]"
+            className="rounded-xl border border-zinc-800 bg-[#111114] p-5 transition-all duration-200 hover:border-zinc-700 hover:bg-[#15151a] flex flex-col justify-between"
           >
-            <div className="w-11 h-11 rounded-xl bg-slate-800/90 border border-slate-700/60 flex items-center justify-center mb-4">
-              {icon}
+            <div>
+              <div className="flex items-center justify-between gap-2 mb-3.5">
+                <div className="w-8 h-8 rounded-lg bg-zinc-800/80 border border-zinc-700/60 flex items-center justify-center">
+                  {icon}
+                </div>
+                <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 bg-zinc-800/50 border border-zinc-700/40 px-2 py-0.5 rounded">
+                  {badge}
+                </span>
+              </div>
+              <h3 className="text-sm font-semibold text-white mb-1.5">{title}</h3>
+              <p className="text-xs text-zinc-400 leading-relaxed">{desc}</p>
             </div>
-            <h3 className="text-base font-bold text-white mb-2">{title}</h3>
-            <p className="text-xs text-slate-400 leading-relaxed">{desc}</p>
           </div>
         ))}
       </div>
 
-      {/* How It Works Section */}
-      <div id="architecture" className="w-full max-w-4xl pt-8 border-t border-slate-800/80">
-        <div className="text-center mb-10">
-          <span className="text-xs font-bold uppercase tracking-wider text-blue-400">
+      {/* Architecture / How It Works */}
+      <div id="how-it-works" className="w-full max-w-4xl pt-8 border-t border-zinc-800/80">
+        <div className="text-center mb-8">
+          <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
             Workflow Architecture
           </span>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-white mt-1">
-            How BlockProof Verifies Assignments
+          <h2 className="text-xl sm:text-2xl font-bold text-white mt-1">
+            How It Works
           </h2>
         </div>
 
@@ -223,13 +169,13 @@ export default function Home({ address, setAddress, onConnect, account, role }) 
           {workflowSteps.map(({ step, title, desc }) => (
             <div
               key={step}
-              className="relative rounded-2xl border border-slate-800 bg-[#0e1422] p-5"
+              className="rounded-xl border border-zinc-800 bg-[#111114] p-5 transition-all hover:border-zinc-700 hover:bg-[#15151a]"
             >
-              <div className="text-xs font-mono font-bold text-blue-400 mb-2">
+              <div className="inline-block px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-zinc-800 text-zinc-300 border border-zinc-700/60 mb-3">
                 {step}
               </div>
-              <h4 className="text-sm font-bold text-slate-100 mb-1.5">{title}</h4>
-              <p className="text-xs text-slate-400 leading-relaxed">{desc}</p>
+              <h4 className="text-sm font-semibold text-zinc-100 mb-1.5">{title}</h4>
+              <p className="text-xs text-zinc-400 leading-relaxed">{desc}</p>
             </div>
           ))}
         </div>
