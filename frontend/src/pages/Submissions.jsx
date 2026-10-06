@@ -10,6 +10,7 @@ import {
   HashIcon,
 } from "../components/Icons";
 import { Button, Card } from "../components/ui";
+import { IPFS_GATEWAY } from "../config";
 
 export default function Submissions({
   submissions = [],
@@ -208,10 +209,10 @@ export default function Submissions({
 
                 {/* Actions: View PDF & Verify Action */}
                 <div className="flex items-center gap-2 lg:border-l lg:border-zinc-800 lg:pl-4 shrink-0">
-                  {/* View PDF Button */}
+                  {/* View PDF Button using Dedicated Pinata Gateway */}
                   {s.ipfsHash ? (
                     <a
-                      href={`https://gateway.pinata.cloud/ipfs/${s.ipfsHash}`}
+                      href={`${IPFS_GATEWAY}/${s.ipfsHash}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 transition"
@@ -233,7 +234,7 @@ export default function Submissions({
                   ) : (
                     <div className="flex items-center gap-2">
                       <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-950/60 border border-amber-800/40 text-amber-300 text-xs font-medium">
-                        <ClockIcon className="w-3 h-3 text-amber-400" />
+                        <ClockIcon className="w-3.5 h-3.5 text-amber-400" />
                         Pending
                       </div>
 

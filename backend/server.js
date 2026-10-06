@@ -75,7 +75,7 @@ app.post("/api/upload", upload.single("file"), async (req, res) => {
     return res.json({
       success: true,
       ipfsHash,
-      gatewayUrl: `https://gateway.pinata.cloud/ipfs/${ipfsHash}`,
+      gatewayUrl: `https://cyan-genetic-seahorse-51.mypinata.cloud/ipfs/${ipfsHash}`,
       fileName: req.file.originalname,
       fileSize: req.file.size,
     });
