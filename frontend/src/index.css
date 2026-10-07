@@ -7,14 +7,35 @@
 
   body {
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background-color: #09090b;
-    color: #f4f4f5;
+    background: #070912;
+    color: #f5f7ff;
     letter-spacing: -0.01em;
   }
 
   code, pre {
     font-family: 'JetBrains Mono', monospace;
   }
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background: radial-gradient(circle at 14% 3%, rgba(124, 92, 255, .22), transparent 25rem), radial-gradient(circle at 86% 18%, rgba(29, 198, 218, .14), transparent 24rem), linear-gradient(180deg, #090b16 0%, #06070d 65%, #090914 100%);
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: .34;
+  background-image: linear-gradient(rgba(255,255,255,.026) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.026) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: linear-gradient(to bottom, black, transparent 72%);
 }
 
 /* Minimal scrollbar */

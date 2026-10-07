@@ -51,145 +51,45 @@ export default function Layout({
     }
   }
 
+  const accountPanel = account ? (
+    <div className="rounded-2xl border border-white/[.09] bg-white/[.04] p-3 space-y-2">
+      {role && <span className="inline-flex rounded-lg bg-cyan-400/10 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-cyan-200">{role}</span>}
+      <button onClick={copyAddress} title="Copy wallet address" className="flex w-full items-center justify-between gap-2 font-mono text-xs text-slate-300 hover:text-white">
+        <span>{shortAccount}</span>
+        {copied ? <CheckIcon className="w-3.5 h-3.5 text-emerald-400" /> : <CopyIcon className="w-3.5 h-3.5 text-slate-500" />}
+      </button>
+      <button onClick={() => { if (onDisconnect) onDisconnect(); navigate("/"); }} className="flex items-center gap-2 text-xs text-slate-500 hover:text-rose-300">
+        <LogoutIcon className="w-3.5 h-3.5" /> Disconnect wallet
+      </button>
+    </div>
+  ) : <Button onClick={onConnect} loading={busy} size="sm" icon={<WalletIcon className="w-3.5 h-3.5" />} className="w-full rounded-xl">Connect Wallet</Button>;
+
   return (
-    <div className="min-h-screen bg-[#09090b] text-zinc-100 flex flex-col font-sans selection:bg-zinc-800 selection:text-white">
-      {/* Container */}
-      <div className="flex flex-col min-h-screen max-w-5xl w-full mx-auto px-4 sm:px-6">
-        
-        {/* Header: Super clean, zero middle clutter when logged out */}
-        <header className="sticky top-0 z-30 py-3.5 bg-[#09090b]/90 backdrop-blur-md border-b border-zinc-800/80 transition-all">
-          <div className="flex items-center justify-between">
-            
-            {/* Left: Brand */}
-            <Link
-              to={account ? "/dashboard" : "/"}
-              className="flex items-center gap-2 group text-decoration-none"
-            >
-              <Logo size={24} />
-              <span className="text-sm font-semibold tracking-tight text-zinc-100 group-hover:text-white transition">
-                BlockProof
-              </span>
-            </Link>
+    <div className="min-h-screen font-sans text-slate-100 selection:bg-violet-300/30 selection:text-white lg:p-5">
+      <div className="mx-auto flex min-h-screen max-w-7xl lg:gap-5">
+        <aside className="hidden w-64 shrink-0 flex-col rounded-3xl border border-white/[.09] bg-slate-950/55 p-4 backdrop-blur-xl lg:flex lg:sticky lg:top-5 lg:h-[calc(100vh-2.5rem)]">
+          <Link to={account ? "/dashboard" : "/"} className="flex items-center gap-3 px-2 py-2">
+            <Logo size={34} /><span className="text-base font-bold tracking-tight text-white">BlockProof</span>
+          </Link>
+          <div className="mt-8 px-2 text-[10px] font-semibold uppercase tracking-[.16em] text-slate-500">Workspace</div>
+          <nav className="mt-2 space-y-1">
+            {navItems.map(({ to, label }) => <Link key={to} to={to} className={`block rounded-xl px-3 py-2.5 text-sm font-medium transition ${pathname === to ? "bg-violet-400/15 text-violet-100 ring-1 ring-violet-300/15" : "text-slate-400 hover:bg-white/[.06] hover:text-slate-100"}`}>{label}</Link>)}
+          </nav>
+          <div className="mt-auto">{accountPanel}</div>
+        </aside>
 
-            {/* Center: Role-based Navigation (ONLY visible when connected, NEVER shows Overview) */}
-            {account && navItems.length > 0 && (
-              <nav className="flex items-center gap-1 bg-zinc-900 border border-zinc-800 rounded-lg p-0.5">
-                {navItems.map(({ to, label }) => {
-                  const active = pathname === to;
-                  return (
-                    <Link
-                      key={to}
-                      to={to}
-                      className={`px-3 py-1 rounded-md text-xs font-medium transition ${
-                        active
-                          ? "bg-zinc-800 text-white"
-                          : "text-zinc-400 hover:text-zinc-200"
-                      }`}
-                    >
-                      {label}
-                    </Link>
-                  );
-                })}
-              </nav>
-            )}
-
-            {/* Right: Wallet Button or Account Pill */}
-            <div className="flex items-center gap-2">
-              {account ? (
-                <div className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 rounded-lg px-2.5 py-1">
-                  {/* Role Tag */}
-                  {role && (
-                    <span
-                      className={`text-[11px] font-medium px-1.5 py-0.5 rounded ${
-                        role === "Professor"
-                          ? "bg-zinc-800 text-zinc-200"
-                          : role === "Student"
-                          ? "bg-emerald-950/60 text-emerald-300 border border-emerald-800/40"
-                          : "bg-amber-950/60 text-amber-300 border border-amber-800/40"
-                      }`}
-                    >
-                      {role}
-                    </span>
-                  )}
-
-                  {/* Copy Account */}
-                  <button
-                    onClick={copyAddress}
-                    title="Copy wallet address"
-                    className="flex items-center gap-1.5 font-mono text-xs text-zinc-300 hover:text-white transition cursor-pointer"
-                  >
-                    <span>{shortAccount}</span>
-                    {copied ? (
-                      <CheckIcon className="w-3 h-3 text-emerald-400" />
-                    ) : (
-                      <CopyIcon className="w-3 h-3 text-zinc-500 hover:text-zinc-300" />
-                    )}
-                  </button>
-
-                  {/* Disconnect */}
-                  <button
-                    onClick={() => {
-                      if (onDisconnect) onDisconnect();
-                      navigate("/");
-                    }}
-                    title="Disconnect wallet"
-                    className="p-1 text-zinc-500 hover:text-rose-400 rounded transition cursor-pointer ml-1"
-                  >
-                    <LogoutIcon className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              ) : (
-                <Button
-                  onClick={onConnect}
-                  loading={busy}
-                  size="sm"
-                  icon={<WalletIcon className="w-3.5 h-3.5" />}
-                  className="bg-zinc-100 hover:bg-zinc-200 text-zinc-950 font-semibold rounded-lg px-3.5"
-                >
-                  Connect Wallet
-                </Button>
-              )}
+        <div className="flex min-w-0 flex-1 flex-col px-4 sm:px-6 lg:px-0">
+          <header className="sticky top-0 z-30 pt-3 lg:hidden">
+            <div className="flex items-center justify-between rounded-2xl border border-white/[.09] bg-slate-950/75 px-3.5 py-2.5 backdrop-blur-xl">
+              <Link to={account ? "/dashboard" : "/"} className="flex items-center gap-2"><Logo size={25} /><span className="text-sm font-bold">BlockProof</span></Link>
+              <div className="w-auto max-w-[11rem]">{account ? <button onClick={copyAddress} className="font-mono text-xs text-slate-300">{shortAccount}</button> : <Button onClick={onConnect} loading={busy} size="sm" icon={<WalletIcon className="w-3.5 h-3.5" />}>Connect</Button>}</div>
             </div>
-          </div>
-        </header>
+          </header>
 
-        {/* Global Notice / Toast */}
-        {notice && (
-          <div className="mt-3">
-            <div
-              className={`flex items-center justify-between gap-3 px-3.5 py-2 rounded-lg text-xs border ${
-                notice.type === "error"
-                  ? "bg-rose-950/40 border-rose-900 text-rose-300"
-                  : notice.type === "success"
-                  ? "bg-emerald-950/40 border-emerald-900 text-emerald-300"
-                  : "bg-zinc-900 border-zinc-800 text-zinc-300"
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                {notice.type === "error" ? (
-                  <AlertCircleIcon className="w-3.5 h-3.5 text-rose-400 shrink-0" />
-                ) : notice.type === "success" ? (
-                  <CheckIcon className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                ) : (
-                  <span className="w-1.5 h-1.5 rounded-full bg-zinc-400 shrink-0" />
-                )}
-                <span>{notice.text}</span>
-              </div>
-              <button
-                onClick={() => notice.onClose && notice.onClose()}
-                className="text-current opacity-60 hover:opacity-100 p-0.5 text-xs cursor-pointer"
-              >
-                ✕
-              </button>
-            </div>
-          </div>
-        )}
+          {notice && <div className={`mt-3 flex items-center justify-between gap-3 rounded-xl border px-3.5 py-2.5 text-xs ${notice.type === "error" ? "border-rose-400/20 bg-rose-500/10 text-rose-200" : notice.type === "success" ? "border-emerald-400/20 bg-emerald-500/10 text-emerald-200" : "border-white/[.09] bg-white/[.04] text-slate-300"}`}><div className="flex gap-2">{notice.type === "error" ? <AlertCircleIcon className="w-3.5 h-3.5 shrink-0" /> : <CheckIcon className="w-3.5 h-3.5 shrink-0" />}<span>{notice.text}</span></div><button onClick={() => notice.onClose && notice.onClose()}>✕</button></div>}
 
-        {/* Main Content */}
-        <main className="flex-1 py-7">{children}</main>
-
-        {/* Clean Footer */}
-        <footer className="mt-auto py-5 border-t border-zinc-900 text-xs text-zinc-500 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <main className="flex-1 py-8 sm:py-10 lg:py-12">{children}</main>
+          <footer className="mt-auto flex flex-col items-center justify-between gap-3 border-t border-white/[.07] py-6 text-xs text-slate-500 sm:flex-row">
           <div className="flex items-center gap-2">
             <span className="font-medium text-zinc-400">BlockProof</span>
             <span>·</span>
@@ -218,5 +118,6 @@ export default function Layout({
         </footer>
       </div>
     </div>
+  </div>
   );
 }

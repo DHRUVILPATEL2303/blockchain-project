@@ -2,7 +2,7 @@ export default function Logo({ size = 26, className = "" }) {
   return (
     <div
       style={{ width: size, height: size }}
-      className={`flex items-center justify-center rounded-lg bg-zinc-100 text-zinc-950 shrink-0 ${className}`}
+      className={`flex items-center justify-center rounded-xl bg-gradient-to-br from-violet-300 via-indigo-300 to-cyan-200 text-slate-950 shrink-0 shadow-[0_0_28px_rgba(139,92,246,.38)] ${className}`}
     >
       <svg
         width={Math.round(size * 0.6)}
