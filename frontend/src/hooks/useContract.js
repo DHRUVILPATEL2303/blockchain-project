@@ -1,14 +1,21 @@
 import { useCallback, useEffect, useState } from "react";
 import { BrowserProvider, Contract, isAddress } from "ethers";
+import { useAccount, useConnect, useDisconnect, useSwitchChain } from "wagmi";
 import { ABI } from "../abi";
-import { CONTRACT_ADDRESS } from "../config";
+import { CONTRACT_ADDRESS, PINATA_JWT } from "../config";
+import { CONTRACT_CHAIN } from "../wagmi";
 
 const short = (address) => (address ? `${address.slice(0, 6)}…${address.slice(-4)}` : "");
 
 const errorMessage = (error) => {
   if (!error) return "An unknown error occurred";
-  if (error.code === 4001 || error.code === "ACTION_REJECTED") {
-    return "Transaction was cancelled in MetaMask.";
+  if (
+    error.code === 4001 ||
+    error.code === "ACTION_REJECTED" ||
+    error.name === "UserRejectedRequestError" ||
+    error?.info?.error?.code === 4001
+  ) {
+    return "Transaction was cancelled in wallet.";
   }
   return error.reason || error.shortMessage || error.message || "Operation failed";
 };
@@ -19,51 +26,128 @@ async function hashFile(file) {
 }
 
 export async function uploadToIpfs(file) {
-  const formData = new FormData();
-  formData.append("file", file);
-
-  let res;
-  try {
-    res = await fetch("http://localhost:5000/api/upload", {
-      method: "POST",
-      body: formData,
-    });
-  } catch {
-    throw new Error("Could not connect to IPFS upload service. Please ensure the backend is running (`node server.js` in the backend folder).");
+  const pinataJwt = PINATA_JWT || import.meta.env.VITE_PINATA_JWT;
+  if (!pinataJwt) {
+    throw new Error("Pinata is not configured. Please verify your Pinata JWT key.");
   }
 
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append(
+    "pinataMetadata",
+    JSON.stringify({
+      name: file.name,
+      keyvalues: {
+        app: "BlockProof",
+        uploadedAt: new Date().toISOString(),
+      },
+    })
+  );
+
+  const res = await fetch("https://api.pinata.cloud/pinning/pinFileToIPFS", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${pinataJwt}`,
+    },
+    body: formData,
+  });
+
   if (!res.ok) {
-    const errJson = await res.json().catch(() => ({}));
-    throw new Error(errJson.error || "Failed to upload file to IPFS.");
+    const errorText = await res.text().catch(() => "");
+    throw new Error(errorText || "Pinata could not pin this file to IPFS.");
   }
 
   const data = await res.json();
-  return data.ipfsHash;
+  if (!data.IpfsHash) {
+    throw new Error("Pinata did not return an IPFS CID for this file.");
+  }
+  return data.IpfsHash;
 }
 
 export function useContract() {
   const [address, setAddress] = useState(
     () => CONTRACT_ADDRESS || localStorage.getItem("ps_addr") || ""
   );
-  const [account, setAccount] = useState("");
   const [contract, setContract] = useState(null);
   const [role, setRole] = useState("");
   const [submissions, setSubmissions] = useState([]);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState(null);
 
+  // Wagmi hooks for wallet connection management
+  const { address: account, chainId, isConnected, connector, status } = useAccount();
+  const { connectors, connectAsync, isPending: isConnecting } = useConnect();
+  const { disconnectAsync } = useDisconnect();
+  const { switchChainAsync, isPending: isSwitchingChain } = useSwitchChain();
+  const networkMismatch = isConnected && chainId !== CONTRACT_CHAIN.id;
+
+  // Create contract instance whenever Wagmi account/connector changes
+  useEffect(() => {
+    let active = true;
+
+    async function initContract() {
+      if (!isConnected || !account || !connector) {
+        setContract(null);
+        setRole("");
+        setSubmissions([]);
+        return;
+      }
+
+      if (chainId !== CONTRACT_CHAIN.id) {
+        setContract(null);
+        setRole("");
+        setSubmissions([]);
+        setNotice({
+          text: `Switch your wallet to ${CONTRACT_CHAIN.name} to access student registration and submissions.`,
+          type: "error",
+        });
+        return;
+      }
+
+      const targetAddr = (CONTRACT_ADDRESS || address || "").trim();
+      if (!isAddress(targetAddr)) {
+        setContract(null);
+        return;
+      }
+
+      try {
+        const rawProvider = await connector.getProvider();
+        if (!active) return;
+        const provider = new BrowserProvider(rawProvider);
+        const signer = await provider.getSigner();
+        if (!active) return;
+        const instance = new Contract(targetAddr, ABI, signer);
+        setContract(instance);
+      } catch (err) {
+        console.error("Error initializing contract instance:", err);
+        if (active) {
+          setContract(null);
+        }
+      }
+    }
+
+    initContract();
+
+    return () => {
+      active = false;
+    };
+  }, [isConnected, account, chainId, connector, address]);
+
   const load = useCallback(async () => {
     if (!contract || !account) return;
     try {
       const professor = await contract.professor();
       const identity = await contract.getIdentity(account);
-      setRole(
-        professor.toLowerCase() === account.toLowerCase()
-          ? "Professor"
-          : identity.registered
-          ? "Student"
-          : "Unregistered"
-      );
+      const isProf = professor.toLowerCase() === account.toLowerCase();
+      const isStud = Boolean(identity?.registered || identity?.[2]);
+      console.log("[useContract] Identity loaded for account:", account, {
+        isProf,
+        isStud,
+        name: identity?.[0] ?? identity?.name,
+        enroll: identity?.[1] ?? identity?.enrollmentNo,
+        registeredRaw: identity?.[2] ?? identity?.registered,
+      });
+      setRole(isProf ? "Professor" : isStud ? "Student" : "Unregistered");
       const total = Number(await contract.totalSubmissions());
       const records = [];
       for (let id = 1; id <= total; id += 1) {
@@ -87,45 +171,62 @@ export function useContract() {
   }, [account, contract]);
 
   useEffect(() => {
-    if (!window.ethereum) return undefined;
-    const reload = () => window.location.reload();
-    window.ethereum.on("accountsChanged", reload);
-    window.ethereum.on("chainChanged", reload);
-    return () => {
-      window.ethereum.removeListener("accountsChanged", reload);
-      window.ethereum.removeListener("chainChanged", reload);
-    };
-  }, []);
+    if (contract && account) {
+      load().catch((error) => setNotice({ text: errorMessage(error), type: "error" }));
+    }
+  }, [contract, account, load]);
 
-  useEffect(() => {
-    load().catch((error) => setNotice({ text: errorMessage(error), type: "error" }));
-  }, [load]);
-
-  const connect = async (contractAddress = address) => {
-    const targetAddr = (CONTRACT_ADDRESS || contractAddress || address || "").trim();
+  const connect = async () => {
     try {
-      if (!window.ethereum) {
-        throw new Error("MetaMask is not installed. Please install MetaMask to connect.");
-      }
-      if (!isAddress(targetAddr)) {
-        throw new Error("Please verify the Ethereum contract address in config.js.");
-      }
-      const provider = new BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
-      const userAddr = await signer.getAddress();
-      const instance = new Contract(targetAddr, ABI, signer);
+      // Use the browser-injected connector configured in wagmi.js.
+      const targetConnector = connectors.find((c) => c.type === "injected") || connectors[0];
 
-      setAccount(userAddr);
-      setContract(instance);
-      setAddress(targetAddr);
+      if (!targetConnector) {
+        throw new Error("No browser wallet found. Install or unlock an Ethereum wallet to continue.");
+      }
+
+      const result = await connectAsync({
+        connector: targetConnector,
+        chainId: CONTRACT_CHAIN.id,
+      });
       setNotice(null);
+      return result?.accounts?.[0] || null;
     } catch (error) {
-      setNotice({ text: errorMessage(error), type: "error" });
+      console.error("Wagmi connect error:", error);
+      if (
+        error.name === "UserRejectedRequestError" ||
+        error.code === 4001 ||
+        error.message?.includes("rejected") ||
+        error.message?.includes("User rejected")
+      ) {
+        setNotice({
+          text: "Wallet connection was cancelled in your wallet.",
+          type: "error",
+        });
+      } else {
+        setNotice({ text: errorMessage(error), type: "error" });
+      }
+      return null;
     }
   };
 
-  const disconnect = () => {
-    setAccount("");
+  const switchToContractNetwork = async () => {
+    try {
+      await switchChainAsync({ chainId: CONTRACT_CHAIN.id });
+      setNotice(null);
+      return true;
+    } catch (error) {
+      setNotice({ text: errorMessage(error), type: "error" });
+      return false;
+    }
+  };
+
+  const disconnect = async () => {
+    try {
+      await disconnectAsync();
+    } catch (err) {
+      console.error("Wagmi disconnect error:", err);
+    }
     setContract(null);
     setRole("");
     setSubmissions([]);
@@ -149,16 +250,21 @@ export function useContract() {
   return {
     address,
     setAddress,
-    account,
+    account: account || "",
     shortAccount: account ? short(account) : "",
+    isConnected: isConnected && status === "connected",
+    isConnecting,
+    networkMismatch,
+    contractChainName: CONTRACT_CHAIN.name,
     contract,
     role,
     submissions,
-    busy,
+    busy: busy || isConnecting || isSwitchingChain,
     notice,
     setNotice,
     connect,
     disconnect,
+    switchToContractNetwork,
     run,
     hashFile,
     uploadToIpfs,

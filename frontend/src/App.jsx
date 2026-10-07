@@ -6,8 +6,8 @@ import Home from "./pages/Home";
 import Identity from "./pages/Identity";
 import Submissions from "./pages/Submissions";
 
-function Protected({ children, contract }) {
-  return contract ? children : <Navigate to="/" replace />;
+function Protected({ children, isAllowed }) {
+  return isAllowed ? children : <Navigate to="/" replace />;
 }
 
 export default function App() {
@@ -15,8 +15,8 @@ export default function App() {
   const navigate = useNavigate();
 
   const handleConnect = async () => {
-    await wallet.connect();
-    if (wallet.account) {
+    const connectedAccount = await wallet.connect();
+    if (connectedAccount) {
       navigate("/dashboard");
     }
   };
@@ -27,6 +27,8 @@ export default function App() {
         onClose: () => wallet.setNotice(null),
       }
     : null;
+
+  const isAllowed = Boolean(wallet.account || wallet.contract);
 
   return (
     <Layout
@@ -54,7 +56,7 @@ export default function App() {
         <Route
           path="/dashboard"
           element={
-            <Protected contract={wallet.contract}>
+            <Protected isAllowed={isAllowed}>
               <Dashboard {...wallet} />
             </Protected>
           }
@@ -62,7 +64,7 @@ export default function App() {
         <Route
           path="/submissions"
           element={
-            <Protected contract={wallet.contract}>
+            <Protected isAllowed={isAllowed}>
               <Submissions {...wallet} />
             </Protected>
           }
@@ -71,7 +73,7 @@ export default function App() {
         <Route
           path="/identity"
           element={
-            <Protected contract={wallet.contract}>
+            <Protected isAllowed={isAllowed}>
               {wallet.role === "Professor" ? (
                 <Identity contract={wallet.contract} />
               ) : (

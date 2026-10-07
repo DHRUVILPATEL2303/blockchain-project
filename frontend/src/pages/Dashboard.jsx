@@ -23,6 +23,9 @@ export default function Dashboard({
   account,
   shortAccount,
   submissions = [],
+  networkMismatch,
+  contractChainName,
+  switchToContractNetwork,
 }) {
   const [form, setForm] = useState({ no: "1", title: "", wallet: "", name: "", enroll: "" });
   const [fileInfo, setFileInfo] = useState(null);
@@ -76,7 +79,7 @@ export default function Dashboard({
       uploadedIpfsCid = await uploadToIpfs(fileInfo.file);
       setIpfsCid(uploadedIpfsCid);
     } catch (err) {
-      alert(err.message || "Could not upload file to IPFS. Make sure the backend server is running.");
+      alert(err.message || "Could not upload file to IPFS through Pinata.");
       setUploadingIpfs(false);
       return;
     } finally {
@@ -175,8 +178,27 @@ export default function Dashboard({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         {/* Main Action Form */}
         <div className="lg:col-span-7 space-y-4">
+          {networkMismatch && (
+            <Card className="border-amber-900/50 bg-amber-950/20">
+              <div className="flex items-start gap-3">
+                <AlertCircleIcon className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                <div className="space-y-3">
+                  <div>
+                    <h3 className="text-sm font-semibold text-amber-200">Wrong network</h3>
+                    <p className="text-xs text-zinc-300 mt-1">
+                      Student registration and submissions for this contract are on {contractChainName}.
+                    </p>
+                  </div>
+                  <Button onClick={switchToContractNetwork} disabled={busy} loading={busy} size="sm">
+                    Switch to {contractChainName}
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          )}
+
           {/* Professor: Register Student */}
-          {role === "Professor" && (
+          {role === "Professor" && !networkMismatch && (
             <Card>
               <div className="flex items-center gap-2 mb-1">
                 <ShieldCheckIcon className="w-4 h-4 text-zinc-300" />
@@ -225,7 +247,7 @@ export default function Dashboard({
           )}
 
           {/* Student: Submit Practical */}
-          {role === "Student" && (
+          {role === "Student" && !networkMismatch && (
             <Card>
               <div className="flex items-center gap-2 mb-1">
                 <AcademicCapIcon className="w-4 h-4 text-zinc-300" />
@@ -325,7 +347,7 @@ export default function Dashboard({
           )}
 
           {/* Unregistered Guest View */}
-          {role === "Unregistered" && (
+          {role === "Unregistered" && !networkMismatch && (
             <Card className="border-amber-900/50 bg-amber-950/20">
               <div className="flex items-start gap-3">
                 <AlertCircleIcon className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />

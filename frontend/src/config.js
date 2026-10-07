@@ -1,5 +1,10 @@
 // After deploying in Remix, paste your contract address between the quotes, then restart `npm run dev`.
-export const CONTRACT_ADDRESS = "0x9acb89F89516ec6fF3A893153AeB1696808C84e0";
+export const CONTRACT_ADDRESS = "0xeA5f4a9e15a509C9573fc2D9C79Df96c846C0cD5";
 
-// Your dedicated Pinata Gateway for instant PDF loading:
-export const IPFS_GATEWAY = "https://cyan-genetic-seahorse-51.mypinata.cloud/ipfs";
+// Dedicated Pinata Gateway for instant PDF loading:
+export const IPFS_GATEWAY = "https://silver-general-lemur-95.mypinata.cloud/ipfs";
+
+// Pinata JWT for direct client-side IPFS pinning (no backend required):
+export const PINATA_JWT =
+    import.meta.env.VITE_PINATA_JWT ||
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiIxOGI1YmZkMi0xMmFmLTQ0MzctYTU4Zi0wMmMwNDdkYTVjMzciLCJlbWFpbCI6InBhdGVsZGhydXZpbDIwMjFAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsInBpbl9wb2xpY3kiOnsicmVnaW9ucyI6W3siZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjEsImlkIjoiRlJBMSJ9LHsiZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjEsImlkIjoiTllDMSJ9XSwidmVyc2lvbiI6MX0sIm1mYV9lbmFibGVkIjpmYWxzZSwic3RhdHVzIjoiQUNUSVZFIn0sImF1dGhlbnRpY2F0aW9uVHlwZSI6InNjb3BlZEtleSIsInNjb3BlZEtleUtleSI6IjczZmVjMDVkOTQ4NGU2YzA5MDBjIiwic2NvcGVkS2V5U2VjcmV0IjoiODgyZmEyMWU0N2FmZDUwNzczM2U5NWQ1MjYyYTg3ZWVmMjkyNjUxMDE4ZTZhNGE1ZmM2NDM0MTRjMGVkZGU2YSIsImV4cCI6MTgyMjkzNDMzNn0.LvSlFUmCLJfm5AS3wOTLumuGZ7BaOPrHkoe6V3Y8tcc";
